@@ -18,8 +18,9 @@ port = 12345
 s.connect((host, port))
 
 # 接收小于 1024 字节的数据
-msg = s.recv(1024)
-
-s.close()
-
-print (msg)
+while True:
+    msg = s.recv(1024)
+    if  msg:
+        print (msg)
+    else:
+        os._exit()
