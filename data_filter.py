@@ -13,7 +13,6 @@ import bigEncode
 import ParsBufLen
 
 
-sz_src_file=open("../shhxzq_market_data/debug/sz_20170719.txt.from217",'rb')
 #sz_target_file=open("../shhxzq_market_data/debug/sz_20170719.txt.from217.backup",'ab+')
 len_buf_=sz_src_file.read(8)
 msg_len=ParsBufLen.ParseBufLen(len_buf_)

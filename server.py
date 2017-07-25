@@ -12,7 +12,7 @@ import checksum
 import bigEncode
 import ParsBufLen
 
-total =0
+
 sz_src_file=open("../shhxzq_market_data/debug/sz_20170719.txt.from217",'rb')
 
 

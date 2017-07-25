@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # 文件名：checksum.py
 # -*- coding: UTF-8 -*-
+
 def checksum(msg):
     msg_len=len(msg)
     sumed=0

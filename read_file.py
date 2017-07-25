@@ -35,14 +35,14 @@ def read_msg(src_file):
 
 #read source data of ShenZhen and transport it to seed
 def trans_data_sz(src_file,client_socket):
-    buf_len=src_file.read(8)
-    buf_len_value=ParsBufLen.ParseBufLen(buf_len)
 	
     #msg=read_msg(src_file)
-    total_lost=0
     while True:
         msg=read_msg(src_file)		
         if msg: 
+            if not msg['msg_type']:
+                print("Shenzhen market file end!")
+                break
             if checksum.checksum(msg['data']):
                 client_socket.send(msg['data'])			
             else:
