@@ -23,34 +23,41 @@ def read_msg(src_file):
     tail=src_file.read(4)
     tail_value=int.from_bytes(tail,'big')
     data=bytearray(msg_type+body_len+body+tail)	
+    eof = len(msg_type) < 4 
     msg={'msg_type':msg_type,
          'msg_type_value':msg_type_value,
 		 'body_len':body_len,
 		 'body_len_value':body_len_value,
-		 'body,tail':body,
+		 'body':body,
+         'actual_body_len_value' : len(body),
 		 'tail':tail,
 		 'tail_value':tail_value,
-		 'data':data}
+		 'data':data,
+         'eof':eof}
     return msg
 
 #read source data of ShenZhen and transport it to seed
 def trans_data_sz(src_file,client_socket):
 	
-    #msg=read_msg(src_file)
+
     while True:
-        msg=read_msg(src_file)		
-        if msg: 
-            if not msg['msg_type']:
-                print("Shenzhen market file end!")
-                break
-            if checksum.checksum(msg['data']):
-                client_socket.send(msg['data'])			
+        msg=read_msg(src_file)	
+        if msg:       #判断body_length是否超长            	
+            #if msg['msg_type']: 
+            if not msg['eof']: #判断文件是否结束            
+                if checksum.checksum(msg['data']):
+                    client_socket.send(msg['data'])			
+                elif (msg['body_len_value'] == msg['actual_body_len_value']):
+                    #print("body_len : ",msg['body_len_value'])
+                    src_file.seek(-msg['body_len_value']-11,1)
+                else:
+                    src_file.seek(-msg['actual_body_len_value']-7,1)
             else:
-                src_file.seek(-msg['body_len_value']-11,1)
+                print("Shenzhen market file end!")
+                print(msg)
+                break
         else:
-    	    src_file.seek(-7,1)
-      
-    
+            src_file.seek(-7,1)
 
 #read source data of shanghai and transport it to seed
 def trans_data_sh(src_file,dest_file):	

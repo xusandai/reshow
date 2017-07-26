@@ -13,7 +13,7 @@ import bigEncode
 import ParsBufLen
 
 
-sz_src_file=open("../shhxzq_market_data/debug/sz_20170719.txt.from217",'rb')
+sz_src_file=open("../shhxzq_market_data//debug/sz_20170725.txt",'rb')
 
 
 #sz_src_file=open("../shhxzq_market_data/debug/test_data.backup",'rb')
@@ -85,13 +85,13 @@ read_file.trans_data_sz(sz_src_file,client_socket)
 # print("relogon recvid : ")
 # print(relogon[28:47])
 # client_socket.send(relogon)
-i=0
-while True:
-	if not read_file.trans_data_sz(sz_src_file,client_socket):
-		print("ShenZhen market end!")
-		break
-	i=i+1
-	print(i)
+# i=0
+# while True:
+# 	if not read_file.trans_data_sz(sz_src_file,client_socket):
+# 		print("ShenZhen market end!")
+# 		break
+# 	i=i+1
+# 	print(i)
 	#print(i)
 #	sh_dest_file=open("/home/"+user_name+"/mnt/local/SHSZ/FAST/mktdt00.txt",'wb+') 
 #	if not read_file.trans_data_sh(sh_src_file,sh_dest_file):
