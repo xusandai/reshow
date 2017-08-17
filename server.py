@@ -8,13 +8,10 @@ import sys
 import time
 import getpass
 import read_file
-import checksum
-import bigEncode
-import ParsBufLen
+import threading
 
 
-sz_src_file=open("../shhxzq_market_data//debug/sz_20170725.txt",'rb')
-
+sz_src_file = '/home/xhw/shhxzq_market_data/debug/sz_20170802.txt.backup'
 
 #sz_src_file=open("../shhxzq_market_data/debug/test_data.backup",'rb')
 #print(sz_src_file.read(8))
@@ -30,7 +27,7 @@ sz_src_file=open("../shhxzq_market_data//debug/sz_20170725.txt",'rb')
 server_socket = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM) 
 server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-server_socket.settimeout(100)
+server_socket.settimeout(1000)
 # 获取本地主机名
 host = "127.0.0.1"
 port = 12345
@@ -42,60 +39,31 @@ server_socket.bind((host, port))
 # 设置最大连接数，超过后排队
 server_socket.listen(5)
 
-# 建立客户端连接
-client_socket,addr = server_socket.accept()      
-print("连接地址: %s" % str(addr))
+client_sockets = []
+client_count = 0
+threads = []
+i=0
+sh_src_file=open("/home/xhw/shhxzq_market_data/debug/sh_20170808.txt",'rb')
+client_socket, addr = server_socket.accept()
+print(client_socket,addr)
+read_file.trans_data_sh(sh_src_file,client_socket)
 
-#receive logon message from seed
-logon=client_socket.recv(10240)
-print("logon msg : ")
-print(logon)
+# class socket_thread (threading.Thread):
 
-read_file.trans_data_sz(sz_src_file,client_socket)
-# msg_type=sz_src_file.read(4)
-# client_socket.send(bigEncode.bigEncode(msg_type,4))
+     
 
-# body_len=sz_src_file.read(4)
-# client_socket.send(bigEncode.bigEncode(body_len,4))
+#     def __init__(self, server_socket, sz_src_file):
+#         threading.Thread.__init__(self)		
+#         self.__server_socket = server_socket
+#         self.__sz_src_file = open(sz_src_file,'rb')
 
-# send_id=sz_src_file.read(20)
-# client_socket.send(send_id)
+#     def run(self):
+#         self.__client_socket = self.__server_socket.accept()
+#         print("connect addr : %s" % str(self.__client_socket[0]))
+#         socket_thread(server_socket,sz_src_file).start()
+#         read_file.trans_data_sz(self.__sz_src_file,self.__client_socket[0])
+#         self.__client_socket[0].close()
 
-# target_id=sz_src_file.read(20)
-# client_socket.send(target_id)
-
-# heart_beat_int=sz_src_file.read(4)
-# client_socket.send(bigEncode.bigEncode(heart_beat_int,4))
-
-# password=sz_src_file.read(16)
-# client_socket.send(password)
-
-# DefaultApplVerID=sz_src_file.read(32)
-# client_socket.send(DefaultApplVerID)
-
-# check_sum=sz_src_file.read(4)
-# client_socket.send(bigEncode.bigEncode(check_sum,4))
-
-#client_socket.send(sz_src_file.read(104))
-
-
-# relogon=sz_src_file.read(104)
-# print("relogon sendid : ")
-# print(relogon[8:27])
-# print("relogon recvid : ")
-# print(relogon[28:47])
-# client_socket.send(relogon)
-# i=0
-# while True:
-# 	if not read_file.trans_data_sz(sz_src_file,client_socket):
-# 		print("ShenZhen market end!")
-# 		break
-# 	i=i+1
-# 	print(i)
-	#print(i)
-#	sh_dest_file=open("/home/"+user_name+"/mnt/local/SHSZ/FAST/mktdt00.txt",'wb+') 
-#	if not read_file.trans_data_sh(sh_src_file,sh_dest_file):
-#		print("ShangHai market end!")
-	#time.sleep(1)
-
-#	sh_dest_file.close()
+# socket_thread(server_socket,sz_src_file).start()
+# time.sleep(3)
+# socket_thread(server_socket,sz_src_file).start()

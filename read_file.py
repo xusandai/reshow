@@ -10,7 +10,7 @@ import ParsBufLen
 
 
 
-def read_msg(src_file):
+def read_sz(src_file):
     msg_type=src_file.read(4)
     msg_type_value=int.from_bytes(msg_type,'big')
 
@@ -38,15 +38,20 @@ def read_msg(src_file):
 
 #read source data of ShenZhen and transport it to seed
 def trans_data_sz(src_file,client_socket):
-	
-
+    i = 0
     while True:
-        msg=read_msg(src_file)	
-        if msg:       #判断body_length是否超长            	
+        msg=read_sz(src_file)	 
+ 
+        if msg:       #判断body_length是否超长           	
             #if msg['msg_type']: 
             if not msg['eof']: #判断文件是否结束            
                 if checksum.checksum(msg['data']):
-                    client_socket.send(msg['data'])			
+                    client_socket.send(msg['data'])	
+                    
+                    if i == 0:
+                        print(msg['data'])
+                        print(src_file.tell())
+                    i += 1		
                 elif (msg['body_len_value'] == msg['actual_body_len_value']):
                     #print("body_len : ",msg['body_len_value'])
                     src_file.seek(-msg['body_len_value']-11,1)
@@ -59,25 +64,64 @@ def trans_data_sz(src_file,client_socket):
         else:
             src_file.seek(-7,1)
 
-#read source data of shanghai and transport it to seed
-def trans_data_sh(src_file,dest_file):	
-    #src_file and dest_file are returned by open() 
-    #print(`time.time())
-    last_access_time=os.stat(dest_file.name).st_atime
-    begin_str=src_file.read(7)
-    if not begin_str:
+def get_domin(src_file):
+    tmp = b''
+    begin_string = b''
+    while b'\x01' != tmp:      
+        tmp = src_file.read(1) 
+        begin_string += tmp
+    
+    return begin_string
+def compute_value(buf):
+    result = 0
+    bit_len = len(buf)
+    for i in range(bit_len):
+        result += (buf[bit_len-i-1]-48)*10**i
+    return result
+
+def read_sh(src_file):
+    tmp = bytearray(src_file.read(1024))
+    position = tmp.find(b'8=STEP')
+    i = 0
+    while not position: 
+        i += 1
+        tmp = bytearray(src_file.read(1024))
+        position = tmp.find(b'8=STEP')
+    if 1024 < i:
+        msg['eof'] = True
+        return msg
+    src_file.seek(position-1024,1)
+    begin_string = get_domin(src_file)
+    body_len = get_domin(src_file)
+    body_len_value = compute_value(body_len[2:len(body_len)-1])
+    if body_len_value > 1024000:
+        src_file.seek(-len(body_len),1)
         return False
-    #print(os.stat(dest_file.name).st_atime,'  ',begin_str)
-    version=src_file.read(9)
-    body_length=src_file.read(11)
-    real_body_length=0
-    i=0
-    for i in range(10):
-        if body_length[i]!=0x20:
-            real_body_length=real_body_length*10+int(body_length[i])-0x30
-        i+=1
-    #print("body length ",real_body_length)
-    body=src_file.read(real_body_length)
-    access_time=os.stat(dest_file.name).st_atime
-    dest_file.write(begin_str+version+body_length+body)
-    return True
+    body = src_file.read(body_len_value)
+    tail = get_domin(src_file)
+    
+    if b'10=' != tail[:3]:
+        src_file.seek(-len(body_len)-len(tail),1)
+        return False
+
+    msg={'begin_string':begin_string,
+         'body_len':body_len,
+		 'body_len_value':body_len_value,
+		 'body':body,
+		 'tail':tail,
+         'eof':False}
+    return msg
+
+    
+
+#read source data of shanghai and transport it to seed
+def trans_data_sh(src_file,client_socket):	
+    while True:
+        msg = read_sh(src_file)
+        if msg:
+            if msg['eof']:
+                print('shanghai market end !')
+                break
+            print(msg['begin_string']+msg['body_len']+msg['body']+msg['tail'])
+            client_socket.send(msg['begin_string']+msg['body_len']+msg['body']+msg['tail'])
+        
